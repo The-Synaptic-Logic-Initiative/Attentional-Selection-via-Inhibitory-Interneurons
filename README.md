@@ -57,4 +57,4 @@ UI/UX: CSS Grid/Flexbox with glassmorphic styling and CSS transitions.
 Contributions, issues, and feature requests are welcome! Feel free to check the issues page. If you want to expand this to a 2D cortical sheet or add NMDA/AMPA receptor kinetics, open a pull request!
 
 ## 📝 License
-  ![This project is MIT licensed](https://choosealicense.com/licenses/mit/))
+  [This project is MIT licensed](https://choosealicense.com/licenses/mit/)
