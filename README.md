@@ -40,3 +40,21 @@ This project is built with **100% Vanilla HTML, CSS, and JavaScript**. There is 
 1. Clone the repository:
    ```bash
    git clone [https://github.com/zaros67tg/attentional-selection-sim.git](https://github.com/zaros67tg/attentional-selection-sim.git)
+
+2. Open index.html in any modern web browser.
+
+       Start tweaking the sliders!
+
+##🛠️ Tech Stack
+     
+    Logic & Math: Vanilla JavaScript (requestAnimationFrame loop, Euler method integration).
+
+    Rendering: HTML5 <canvas> for the circuit routing, spike particles, and the live oscilloscope traces.
+
+UI/UX: CSS Grid/Flexbox with glassmorphic styling and CSS transitions.
+
+##🤝 Contributing
+Contributions, issues, and feature requests are welcome! Feel free to check the issues page. If you want to expand this to a 2D cortical sheet or add NMDA/AMPA receptor kinetics, open a pull request!
+
+##📝 License
+  This project is MIT licensed.
