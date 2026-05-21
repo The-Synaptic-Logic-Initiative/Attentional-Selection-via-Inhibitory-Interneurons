@@ -39,4 +39,4 @@ This project is built with **100% Vanilla HTML, CSS, and JavaScript**. There is 
 
 1. Clone the repository:
    ```bash
-   git clone [https://github.com/yourusername/attentional-selection-sim.git](https://github.com/yourusername/attentional-selection-sim.git)
+   git clone [https://github.com/zaros67tg/attentional-selection-sim.git](https://github.com/zaros67tg/attentional-selection-sim.git)
