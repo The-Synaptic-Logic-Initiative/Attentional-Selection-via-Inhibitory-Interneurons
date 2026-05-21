@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ultimate Attentional Selection Simulator</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: system-ui, -apple-system, sans-serif; background: #0f111a; color: #e0dfd8; padding: 20px; line-height: 1.5; }
+#root { max-width: 900px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+h1 { font-size: 20px; font-weight: 600; color: #fff; margin-bottom: 4px; }
+.sub { font-size: 13px; color: #9ca3af; margin-bottom: 12px; }
+.panel { background: #1e212b; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 16px; position: relative; }
+.panel-title { font-size: 11px; font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 12px; }
+.cols3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.cols2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.metric { background: #252833; border-radius: 8px; padding: 12px; }
+.metric-label { font-size: 12px; color: #9ca3af; margin-bottom: 6px; display: flex; justify-content: space-between;}
+.metric-val { font-size: 24px; font-weight: 600; color: #fff; font-family: monospace; }
+.slider-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.slider-row label { font-size: 13px; color: #d1d5db; width: 120px; flex-shrink: 0; }
+.slider-row input[type=range] { flex: 1; accent-color: #a855f7; height: 4px; background: #374151; border-radius: 2px; appearance: none; }
+.slider-row input[type=range]::-webkit-slider-thumb { appearance: none; width: 14px; height: 14px; background: #fff; border-radius: 50%; cursor: pointer; }
+.slider-row span { font-size: 13px; font-weight: 600; font-family: monospace; width: 40px; text-align: right; color: #a855f7; }
+.btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
+button { font-size: 12px; padding: 6px 14px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: #252833; color: #d1d5db; cursor: pointer; font-weight: 500; transition: all 0.2s; }
+button:hover { background: #374151; border-color: rgba(255,255,255,0.3); }
+button.active { background: rgba(168, 85, 247, 0.15); border-color: #a855f7; color: #d8b4fe; }
+.col-tag { font-size: 10px; font-weight: 700; border-radius: 4px; padding: 3px 6px; display: inline-block; text-transform: uppercase; }
+.snr-bar { height: 6px; border-radius: 3px; background: rgba(255,255,255,0.1); overflow: hidden; margin-top: 8px; }
+.snr-fill { height: 100%; border-radius: 3px; transition: width 0.1s ease-out, box-shadow 0.1s; }
+canvas { display: block; width: 100%; border-radius: 8px; }
+#circuit { background: #11131a; border: 1px solid rgba(255,255,255,0.05); cursor: crosshair; }
+#info-box { font-size: 13px; color: #d1d5db; line-height: 1.6; min-height: 80px; background: #252833; padding: 12px; border-radius: 8px; border-left: 3px solid #a855f7; }
+.legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #9ca3af; }
+.legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+</style>
+</head>
+<body>
+<div id="root">
+    <div>
+        <h1>Ultimate Attentional Selection Simulator</h1>
+        <div class="sub">Biased Competition Model · Live Spike Particles · Wilson-Cowan Dynamics</div>
+    </div>
+
+    <div class="panel" style="padding: 0; overflow: hidden;">
+        <canvas id="circuit" height="320"></canvas>
+    </div>
+
+    <div class="cols3">
+        <div class="panel">
+            <div class="panel-title">Col 1 <span class="col-tag" style="background: rgba(59, 130, 246, 0.2); color: #60a5fa;">Blue Signal</span></div>
+            <div class="metric-val" id="act-a">0.00</div>
+            <div class="snr-bar"><div class="snr-fill" id="snr-a" style="background: #3b82f6; width: 0%"></div></div>
+            <div style="font-size: 11px; color: #9ca3af; margin-top: 6px; font-family: monospace;">SNR: <span id="snrv-a" style="color:#fff">0.0</span> dB</div>
+        </div>
+        <div class="panel">
+            <div class="panel-title">Col 2 <span class="col-tag" style="background: rgba(16, 185, 129, 0.2); color: #34d399;">Green Signal</span></div>
+            <div class="metric-val" id="act-b">0.00</div>
+            <div class="snr-bar"><div class="snr-fill" id="snr-b" style="background: #10b981; width: 0%"></div></div>
+            <div style="font-size: 11px; color: #9ca3af; margin-top: 6px; font-family: monospace;">SNR: <span id="snrv-b" style="color:#fff">0.0</span> dB</div>
+        </div>
+        <div class="panel">
+            <div class="panel-title">Col 3 <span class="col-tag" style="background: rgba(239, 68, 68, 0.2); color: #f87171;">Red Distractor</span></div>
+            <div class="metric-val" id="act-c">0.00</div>
+            <div class="snr-bar"><div class="snr-fill" id="snr-c" style="background: #ef4444; width: 0%"></div></div>
+            <div style="font-size: 11px; color: #9ca3af; margin-top: 6px; font-family: monospace;">SNR: <span id="snrv-c" style="color:#fff">0.0</span> dB</div>
+        </div>
+    </div>
+
+    <div class="cols2">
+        <div class="panel">
+            <div class="panel-title">Cortical Environment Controls</div>
+            <div class="slider-row" style="margin-bottom: 16px;">
+                <label>Top-Down Attention</label>
+                <div class="btn-row" id="attend-btns">
+                    <button class="active" onclick="setAttend(0, this)">Col 1</button>
+                    <button onclick="setAttend(1, this)">Col 2</button>
+                    <button onclick="setAttend(2, this)">Col 3</button>
+                    <button onclick="setAttend(-1, this)">None</button>
+                </div>
+            </div>
+            <div class="slider-row">
+                <label>Bias Strength</label>
+                <input type="range" min="0" max="1.5" step="0.05" value="0.8" oninput="state.bias=+this.value; document.getElementById('v-bias').textContent=this.value.toFixed(2)">
+                <span id="v-bias">0.80</span>
+            </div>
+            <div class="slider-row">
+                <label>ACh Level</label>
+                <input type="range" min="0" max="1" step="0.05" value="0.6" oninput="state.ach=+this.value; document.getElementById('v-ach').textContent=this.value.toFixed(2)">
+                <span id="v-ach">0.60</span>
+            </div>
+            <div class="slider-row">
+                <label>Noise Floor</label>
+                <input type="range" min="0" max="0.5" step="0.01" value="0.15" oninput="state.noise=+this.value; document.getElementById('v-noise').textContent=this.value.toFixed(2)">
+                <span id="v-noise">0.15</span>
+            </div>
+        </div>
+
+        <div class="panel" style="display: flex; flex-direction: column; gap: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div class="panel-title" style="margin: 0;">LFP Oscillations (Alpha/Gamma)</div>
+                <div style="display: flex; gap: 10px;">
+                    <div class="legend-item"><div class="legend-dot" style="background:#3b82f6"></div>C1</div>
+                    <div class="legend-item"><div class="legend-dot" style="background:#10b981"></div>C2</div>
+                    <div class="legend-item"><div class="legend-dot" style="background:#ef4444"></div>C3</div>
+                </div>
+            </div>
+            <canvas id="osc" height="80" style="background: #11131a; border: 1px solid rgba(255,255,255,0.05);"></canvas>
+            
+            <div class="panel-title" style="margin-top: 4px; margin-bottom: 0;">Interneuron Inspector</div>
+            <div class="btn-row" id="cell-btns">
+                <button class="active" onclick="setInspector('PV', this)">PV+ Basket</button>
+                <button onclick="setInspector('SST', this)">SST+ Martinotti</button>
+                <button onclick="setInspector('VIP', this)">VIP+ Disinhibition</button>
+            </div>
+            <div id="info-box">
+                <strong style="color: #ef4444;">Parvalbumin (PV+)</strong><br>Fast-spiking basket cells. Provides powerful somatic feedback inhibition to Pyramidal cells. Generates high-frequency Gamma oscillations and is the primary driver of lateral cross-column suppression.
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// --- Constants & Colors ---
+const COL_COLORS = ['#3b82f6', '#10b981', '#ef4444'];
+const CELL_COLORS = { E: '#fbbf24', PV: '#ef4444', SST: '#06b6d4', VIP: '#a855f7' };
+
+// --- Simulation State ---
+const state = {
+    attend: 0, bias: 0.8, ach: 0.6, noise: 0.15, sig: 0.8,
+    E: [0.2, 0.2, 0.2], PV: [0.1, 0.1, 0.1], SST: [0.3, 0.3, 0.3], VIP: [0.1, 0.1, 0.1],
+    oscBuf: [[], [], []], t: 0, particles: []
+};
+
+const dt = 0.005, tau = 0.02;
+function sigmoid(x, slope=5, th=0.5) { return 1 / (1 + Math.exp(-slope * (x - th))); }
+
+// --- Physics Engine ---
+function step() {
+    const { E, PV, SST, VIP, attend, bias, ach, noise, sig } = state;
+    const nE = [], nPV = [], nSST = [], nVIP = [];
+
+    for (let i = 0; i < 3; i++) {
+        const attending = (attend === i);
+        const input = sig * (i < 2 ? 1 : 0.4) + noise * (Math.random() - 0.5);
+        
+        // Neuromodulation
+        const td_bias = attending ? bias : 0;
+        const ach_vip_drive = attending ? ach * 0.8 : ach * 0.2;
+        
+        // Lateral PV Inhibition from other columns
+        const lateral = 0.6 * (E[(i+1)%3] * PV[(i+1)%3] + E[(i+2)%3] * PV[(i+2)%3]);
+
+        // Rate equations
+        const i_VIP = ach_vip_drive + E[i] * 0.4;
+        const i_SST = E[i] * 0.9 - VIP[i] * 0.7; // VIP disinhibits SST
+        const i_PV  = E[i] * 1.2 - SST[i] * 0.3;
+        const i_E   = input + td_bias + E[i]*1.2 - PV[i]*1.1 - SST[i]*0.5 - lateral;
+
+        nE[i]   = E[i]   + (dt/tau) * (-E[i]   + sigmoid(i_E));
+        nPV[i]  = PV[i]  + (dt/tau) * (-PV[i]  + sigmoid(i_PV));
+        nSST[i] = SST[i] + (dt/tau) * (-SST[i] + sigmoid(i_SST, 4, 0.4));
+        nVIP[i] = VIP[i] + (dt/tau) * (-VIP[i] + sigmoid(i_VIP));
+
+        // Oscillations
+        const freq = attending ? 40 + nE[i]*10 : 10 + nSST[i]*5;
+        const amp = 0.3 + nE[i]*0.7;
+        state.oscBuf[i].push(amp * Math.sin(2 * Math.PI * freq * state.t));
+        if (state.oscBuf[i].length > 200) state.oscBuf[i].shift();
+    }
+    state.E = nE; state.PV = nPV; state.SST = nSST; state.VIP = nVIP;
+    state.t += dt;
+}
+
+// --- Particle System ---
+class Spike {
+    constructor(startX, startY, endX, endY, color, controlY) {
+        this.sx = startX; this.sy = startY; 
+        this.ex = endX; this.ey = endY;
+        this.cy = controlY || (startY + endY) / 2; // Bezier control point
+        this.cx = (startX + endX) / 2;
+        this.progress = 0;
+        this.speed = 0.02 + Math.random() * 0.015;
+        this.color = color;
+    }
+    update() { this.progress += this.speed; return this.progress >= 1; }
+    draw(ctx) {
+        const t = this.progress;
+        // Quadratic bezier
+        const x = (1-t)*(1-t)*this.sx + 2*(1-t)*t*this.cx + t*t*this.ex;
+        const y = (1-t)*(1-t)*this.sy + 2*(1-t)*t*this.cy + t*t*this.ey;
+        
+        ctx.beginPath();
+        ctx.arc(x, y, 2.5, 0, Math.PI*2);
+        ctx.fillStyle = '#fff';
+        ctx.shadowBlur = 8;
+        ctx.shadowColor = this.color;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+    }
+}
+
+// --- Rendering ---
+const circuitCanvas = document.getElementById('circuit');
+const oscCanvas = document.getElementById('osc');
+let coords = {};
+
+function initLayout(W, H) {
+    const colW = W / 3;
+    const cx = [colW/2, colW*1.5, colW*2.5];
+    for (let i = 0; i < 3; i++) {
+        coords[`${i}_VIP`] = { x: cx[i], y: 40 };
+        coords[`${i}_SST`] = { x: cx[i] + 45, y: 100 };
+        coords[`${i}_E`]   = { x: cx[i] - 20, y: 180 };
+        coords[`${i}_PV`]  = { x: cx[i] + 35, y: 260 };
+    }
+}
+
+function spawnParticles() {
+    for (let i = 0; i < 3; i++) {
+        // E -> Others (Excitation, Yellow)
+        if (Math.random() < state.E[i] * 0.2) state.particles.push(new Spike(coords[`${i}_E`].x, coords[`${i}_E`].y, coords[`${i}_PV`].x, coords[`${i}_PV`].y, CELL_COLORS.E, coords[`${i}_E`].y));
+        if (Math.random() < state.E[i] * 0.15) state.particles.push(new Spike(coords[`${i}_E`].x, coords[`${i}_E`].y, coords[`${i}_SST`].x, coords[`${i}_SST`].y, CELL_COLORS.E, coords[`${i}_SST`].y));
+        
+        // PV -> E Local (Inhibition, Red)
+        if (Math.random() < state.PV[i] * 0.25) state.particles.push(new Spike(coords[`${i}_PV`].x, coords[`${i}_PV`].y, coords[`${i}_E`].x, coords[`${i}_E`].y, CELL_COLORS.PV, coords[`${i}_PV`].y));
+        
+        // SST -> E Local (Inhibition, Cyan)
+        if (Math.random() < state.SST[i] * 0.15) state.particles.push(new Spike(coords[`${i}_SST`].x, coords[`${i}_SST`].y, coords[`${i}_E`].x, coords[`${i}_E`].y, CELL_COLORS.SST, coords[`${i}_SST`].y));
+        
+        // VIP -> SST Local (Disinhibition, Purple)
+        if (Math.random() < state.VIP[i] * 0.2) state.particles.push(new Spike(coords[`${i}_VIP`].x, coords[`${i}_VIP`].y, coords[`${i}_SST`].x, coords[`${i}_SST`].y, CELL_COLORS.VIP, coords[`${i}_VIP`].y));
+
+        // Lateral PV -> Cross Column E
+        for (let j = 0; j < 3; j++) {
+            if (i !== j && Math.random() < (state.PV[i] * state.E[i] * 0.3)) {
+                state.particles.push(new Spike(coords[`${i}_PV`].x, coords[`${i}_PV`].y, coords[`${j}_E`].x, coords[`${j}_E`].y, CELL_COLORS.PV, 340));
+            }
+        }
+    }
+}
+
+function drawCircuit() {
+    const c = circuitCanvas, ctx = c.getContext('2d');
+    const W = c.offsetWidth, H = c.offsetHeight;
+    if (c.width !== W) { c.width = W; c.height = H; initLayout(W, H); }
+    ctx.clearRect(0, 0, W, H);
+
+    // Draw Lateral arcs first (background)
+    ctx.lineWidth = 1;
+    for (let i=0; i<3; i++) {
+        for(let j=0; j<3; j++) {
+            if(i===j) continue;
+            ctx.beginPath();
+            ctx.strokeStyle = `rgba(239, 68, 68, ${state.PV[i] * 0.3})`;
+            ctx.setLineDash([4, 4]);
+            ctx.moveTo(coords[`${i}_PV`].x, coords[`${i}_PV`].y);
+            ctx.quadraticCurveTo(W/2, 340, coords[`${j}_E`].x, coords[`${j}_E`].y);
+            ctx.stroke();
+        }
+    }
+    ctx.setLineDash([]);
+
+    // Draw Inputs (Bottom up) & Bias (Top down)
+    for (let i = 0; i < 3; i++) {
+        ctx.strokeStyle = `rgba(251, 191, 36, ${state.sig * 0.4})`;
+        ctx.beginPath(); ctx.moveTo(coords[`${i}_E`].x, H); ctx.lineTo(coords[`${i}_E`].x, coords[`${i}_E`].y); ctx.stroke();
+        
+        if (state.attend === i) {
+            ctx.strokeStyle = `rgba(168, 85, 247, ${state.bias})`;
+            ctx.beginPath(); ctx.moveTo(coords[`${i}_VIP`].x, 0); ctx.lineTo(coords[`${i}_VIP`].x, coords[`${i}_VIP`].y); ctx.stroke();
+        }
+    }
+
+    // Draw Nodes
+    const acts = { VIP: state.VIP, SST: state.SST, E: state.E, PV: state.PV };
+    Object.keys(coords).forEach(key => {
+        const [col, type] = key.split('_');
+        const {x, y} = coords[key];
+        const act = acts[type][col];
+        const color = CELL_COLORS[type];
+
+        // Glow
+        ctx.beginPath();
+        ctx.arc(x, y, 12, 0, Math.PI*2);
+        ctx.fillStyle = color;
+        ctx.shadowColor = color;
+        ctx.shadowBlur = 10 + act * 20;
+        ctx.globalAlpha = 0.2 + act * 0.8;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        
+        // Border
+        ctx.globalAlpha = 1;
+        ctx.strokeStyle = color;
+        ctx.lineWidth = type === 'E' && state.attend == col ? 3 : 1.5;
+        ctx.stroke();
+        
+        // Label
+        ctx.fillStyle = '#fff';
+        ctx.font = '9px monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(type, x, y);
+    });
+
+    // Update & Draw Particles
+    spawnParticles();
+    state.particles = state.particles.filter(p => !p.update());
+    state.particles.forEach(p => p.draw(ctx));
+}
+
+function drawOsc() {
+    const c = oscCanvas, ctx = c.getContext('2d');
+    const W = c.offsetWidth, H = c.offsetHeight;
+    if (c.width !== W) { c.width = W; c.height = H; }
+    ctx.clearRect(0, 0, W, H);
+
+    for (let i = 0; i < 3; i++) {
+        const buf = state.oscBuf[i];
+        if (buf.length < 2) continue;
+        ctx.beginPath();
+        ctx.strokeStyle = COL_COLORS[i];
+        ctx.lineWidth = state.attend === i ? 2 : 1;
+        ctx.globalAlpha = 0.8;
+        buf.forEach((v, j) => {
+            const px = (j / 199) * W;
+            const py = H/2 - v * (H/3);
+            j === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+        });
+        ctx.stroke();
+    }
+}
+
+function updateUI() {
+    for (let i = 0; i < 3; i++) {
+        const act = state.E[i];
+        const noiseTerm = state.noise + 0.01;
+        const snr_db = Math.max(-10, 10 * Math.log10(act / noiseTerm));
+        const pct = Math.min(100, Math.max(0, (snr_db + 10) / 20 * 100));
+        
+        const keys = ['a', 'b', 'c'];
+        document.getElementById(`act-${keys[i]}`).textContent = act.toFixed(2);
+        document.getElementById(`snrv-${keys[i]}`).textContent = snr_db.toFixed(1);
+        
+        const bar = document.getElementById(`snr-${keys[i]}`);
+        bar.style.width = `${pct}%`;
+        bar.style.boxShadow = act > 0.4 ? `0 0 10px ${COL_COLORS[i]}` : 'none';
+    }
+}
+
+// --- Interactions ---
+function setAttend(idx, btn) {
+    state.attend = idx;
+    document.querySelectorAll('#attend-btns button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+}
+
+const INFO = {
+    PV: '<strong style="color: #ef4444;">Parvalbumin (PV+)</strong><br>Fast-spiking basket cells. Provides powerful somatic feedback inhibition to Pyramidal cells. Generates high-frequency Gamma oscillations and is the primary driver of lateral cross-column suppression.',
+    SST: '<strong style="color: #06b6d4;">Somatostatin (SST+)</strong><br>Martinotti cells targeting distal apical dendrites. Provides slow, sustained feedback inhibition (Alpha band). When suppressed by VIP+ cells, it "disinhibits" the column, allowing signal to pass.',
+    VIP: '<strong style="color: #a855f7;">VIP+ Disinhibitory</strong><br>The gatekeepers of attention. Activated strongly by Top-Down Bias and ACh. They specifically inhibit SST+ cells, which releases the Pyramidal neurons to capture the sensory input.'
+};
+
+function setInspector(type, btn) {
+    document.querySelectorAll('#cell-btns button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('info-box').innerHTML = INFO[type];
+}
+
+// --- Main Loop ---
+function loop() {
+    for(let k=0; k<3; k++) step(); // Speed up math vs rendering
+    drawCircuit();
+    drawOsc();
+    updateUI();
+    requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
