@@ -45,7 +45,7 @@ This project is built with **100% Vanilla HTML, CSS, and JavaScript**. There is 
 
        Start tweaking the sliders!
 
-##🛠️ Tech Stack
+## 🛠️ Tech Stack
      
     Logic & Math: Vanilla JavaScript (requestAnimationFrame loop, Euler method integration).
 
@@ -53,8 +53,8 @@ This project is built with **100% Vanilla HTML, CSS, and JavaScript**. There is 
 
 UI/UX: CSS Grid/Flexbox with glassmorphic styling and CSS transitions.
 
-##🤝 Contributing
+## 🤝 Contributing
 Contributions, issues, and feature requests are welcome! Feel free to check the issues page. If you want to expand this to a 2D cortical sheet or add NMDA/AMPA receptor kinetics, open a pull request!
 
-##📝 License
-  This project is MIT licensed.
+## 📝 License
+  ![This project is MIT licensed](https://choosealicense.com/licenses/mit/))
